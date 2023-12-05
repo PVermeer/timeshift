@@ -1,0 +1,11 @@
+{
+  "recommendations": [
+    "surajbarkale.ninja",
+    "ms-vscode-remote.remote-containers",
+    "mesonbuild.mesonbuild",
+    "prince781.vala",
+    "ms-azuretools.vscode-docker",
+    "github.vscode-github-actions",
+    "ms-vscode.cpptools"
+  ]
+}

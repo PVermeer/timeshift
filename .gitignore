@@ -30,3 +30,8 @@ debian/timeshift.debhelper.log
 debian/timeshift.substvars
 
 debian/.debhelper/
+
+# vscode
+/build_debug
+/builddir
+/build
