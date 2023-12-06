@@ -124,11 +124,11 @@ public class Subvolume : GLib.Object{
 	public bool remove(){
 
 		if (is_system_subvolume){
-			if (name == "@"){
-				path = path_combine(App.mount_point_app + "/backup", "@");
+			if (name == App.btrfs_root){
+				path = path_combine(App.mount_point_app + "/backup", App.btrfs_root);
 			}
-			else if (name == "@home"){
-				path = path_combine(App.mount_point_app + "/backup-home", "@home");
+			else if (name == App.btrfs_home){
+				path = path_combine(App.mount_point_app + "/backup-home", App.btrfs_home);
 			}
 		}
 		
