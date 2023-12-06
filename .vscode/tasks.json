@@ -1,7 +1,7 @@
 {
   "version": "2.0.0",
   "tasks": [
-		{
+    {
       "type": "shell",
       "command": "sudo meson setup --buildtype=debug build_debug && sudo meson compile -C build_debug && cd build_debug && sudo meson install",
       "problemMatcher": ["$meson-gcc"],
@@ -10,6 +10,34 @@
         "isDefault": true
       },
       "label": "DEBUG: Build and Install"
+    },
+    {
+      "type": "shell",
+      "command": "sudo meson setup --buildtype=release build && sudo meson compile -C build && cd build && sudo meson install",
+      "problemMatcher": ["$meson-gcc"],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "label": "RELEASE: Build and Install"
+    },
+    {
+      "type": "shell",
+      "command": "/bin/bash ./.devcontainer/fedora/create-rpm.sh",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "label": "BUILD RPM: Create RPM package"
+    },
+    {
+      "type": "shell",
+      "command": "sudo rm -rf ./build ./builddir ./build_debug ./build_rpm",
+      "group": {
+        "kind": "build",
+        "isDefault": false
+      },
+      "label": "CLEAN: Remove all build folders"
     }
   ]
 }

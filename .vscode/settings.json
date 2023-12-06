@@ -1,3 +1,4 @@
 {
-  "C_Cpp.default.compileCommands": "/workspaces/timeshift/builddir/compile_commands.json"
+  "C_Cpp.default.compileCommands": "/home/pimv/Repos/timeshift/builddir/compile_commands.json",
+  "mesonbuild.configureOnOpen": false
 }

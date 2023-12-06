@@ -33,5 +33,6 @@ debian/.debhelper/
 
 # vscode
 /build_debug
+/build_rpm
 /builddir
 /build
