@@ -507,7 +507,7 @@ public class SnapshotRepo : GLib.Object{
 		if (btrfs_mode){
 			if (!dir_exists(root_path)){
 				status_message = _("Selected snapshot device is not a system disk");
-				status_details = _("Select BTRFS system disk with root subvolume (@)");
+				status_details = _(@"Select BTRFS system disk with root subvolume ($(App.btrfs_root))");
 				status_code = SnapshotLocationStatus.NO_BTRFS_SYSTEM;
 				log_debug(status_message);
 				return false;
