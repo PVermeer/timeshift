@@ -10,7 +10,15 @@
   },
 
   // Map udev database and allow disk operations
-  "runArgs": ["-v", "/run/udev:/run/udev:ro", "--privileged"]
+  "runArgs": [
+    "-v",
+    "/run/udev:/run/udev:ro",
+    "-v",
+    "/etc/fstab:/etc/fstab:ro",
+    "-v",
+    "/:/docker-host:ro",
+    "--privileged"
+  ]
 
   // Features to add to the dev container. More info: https://containers.dev/features.
   // "features": {},
