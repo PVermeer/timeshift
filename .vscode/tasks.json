@@ -3,7 +3,7 @@
   "tasks": [
     {
       "type": "shell",
-      "command": "sudo meson setup --buildtype=debug build_debug && sudo meson compile -C build_debug && cd build_debug && sudo meson install",
+      "command": "sudo meson setup --buildtype=debug build_debug && (sudo meson compile -C build_debug || sudo meson setup --buildtype=debug --wipe build_debug && sudo meson compile -C build_debug) && cd build_debug && sudo meson install",
       "problemMatcher": ["$meson-gcc"],
       "group": {
         "kind": "build",
