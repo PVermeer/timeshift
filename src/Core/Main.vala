@@ -83,9 +83,61 @@ public class Main : GLib.Object{
 	public LinuxDistro current_distro;
 	public bool mirror_system = false;
 
-	public string btrfs_root = "";
-	public string btrfs_home = "";
-	public string btrfs_subvolumes_names = "";
+	private struct BtrfsSystemSubvolumes {
+		string root;
+		string home;
+	}
+
+	private enum SupportedBtrfsSystemLayout {
+		ubuntu,
+		fedora;
+
+		public static SupportedBtrfsSystemLayout[] all() {
+			return { ubuntu, fedora };
+		}
+
+		public string get_name() {
+			var splitted = this.to_string().split("_");
+			return splitted[splitted.length - 1];
+		}
+
+		public BtrfsSystemSubvolumes get_as_struct() {
+			switch (this) {
+				case ubuntu:
+					return { root: "@", home: "@home" };
+
+				case fedora:
+					return { root: "root", home: "home"};
+
+				default:
+					assert_not_reached();
+			}
+		}
+
+		public string get_subvolume_names() {
+			var volume_struct = this.get_as_struct();
+			return @"$(volume_struct.root),$(volume_struct.home)";
+		}
+
+		public string get_root() {
+			var volume_struct = this.get_as_struct();
+			return volume_struct.root;
+		}
+
+		public string get_home() {
+			var volume_struct = this.get_as_struct();
+			return volume_struct.home;
+		}
+
+		public bool match(Gee.HashMap<string, Subvolume> subvolumes) {
+			return subvolumes.has_key(this.get_root()) && subvolumes.has_key(this.get_home());
+		}
+	}
+
+	// Use ubuntu as default btrfs system to fallback to default behaviour before adding support for other btrfs layouts
+	public string btrfs_root = SupportedBtrfsSystemLayout.ubuntu.get_root();
+	public string btrfs_home = SupportedBtrfsSystemLayout.ubuntu.get_home();
+	public string btrfs_subvolumes_names = SupportedBtrfsSystemLayout.ubuntu.get_subvolume_names();
 
 	public bool schedule_monthly = false;
 	public bool schedule_weekly = false;
@@ -188,16 +240,12 @@ public class Main : GLib.Object{
     }
 
 	public Main(string[] args, bool gui_mode){
-		
+
 		this.mount_point_app = "/run/timeshift/%d".printf(Posix.getpid());
 		dir_create(this.mount_point_app);
 
-		this.btrfs_root = "root";
-		this.btrfs_home = "home";
-		this.btrfs_subvolumes_names = this.btrfs_root + "," + this.btrfs_home;
-			
 		parse_some_arguments(args);
-	
+
 		if (gui_mode){
 			app_mode = "";
 			parent_window = new Gtk.Window(); // dummy
@@ -335,6 +383,8 @@ public class Main : GLib.Object{
 		update_partitions();
 		
 		detect_system_devices();
+
+		detect_system_btrfs_layout();
 
 		detect_encrypted_dirs();
 
@@ -499,6 +549,27 @@ public class Main : GLib.Object{
 					break;
 			}
 		}
+	}
+
+	private void detect_system_btrfs_layout() {
+
+		log_debug("detect_system_btrfs_layout()");
+
+		bool has_detected = false;
+		foreach (var layout in SupportedBtrfsSystemLayout.all()) {
+
+			if (layout.match(sys_subvolumes)) {
+				this.btrfs_root = layout.get_root();
+				this.btrfs_home = layout.get_home();
+				this.btrfs_subvolumes_names = layout.get_subvolume_names();
+
+				log_debug(@"Detected $(layout.get_name()) system subvolume layout");
+				has_detected = true;
+				break;
+			}
+		}
+
+		if (!has_detected) log_debug("Could not detect a supported system subvolume layout");
 	}
 
 	private void detect_encrypted_dirs(){
