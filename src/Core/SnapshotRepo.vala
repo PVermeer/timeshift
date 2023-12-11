@@ -193,13 +193,13 @@ public class SnapshotRepo : GLib.Object{
 		}
 
 		// rsync
-		mount_paths[App.btrfs_root] = "";
-		mount_paths[App.btrfs_home] = "";
+		mount_paths.set(App.btrfs_root, "");
+		mount_paths.set(App.btrfs_home, "");
 			
 		if (btrfs_mode){
 			
-			mount_paths[App.btrfs_root] = mount_path;
-			mount_paths[App.btrfs_home] = mount_path; //default
+			mount_paths.set(App.btrfs_root, mount_path);
+			mount_paths.set(App.btrfs_home, mount_path); //default
 			device_home = device; //default
 			
 			// mount @home if on different disk -------
@@ -208,16 +208,16 @@ public class SnapshotRepo : GLib.Object{
 			
 			if (repo_subvolumes.has_key(App.btrfs_home)){
 				
-				var subvol = repo_subvolumes[App.btrfs_home];
+				var subvol = repo_subvolumes.get(App.btrfs_home);
 				
 				if (subvol.device_uuid != device.uuid){
 					
 					// @home is on a separate device
 					device_home = subvol.get_device();
 					
-					mount_paths[App.btrfs_home] = unlock_and_mount_device(device_home, App.mount_point_app + "/backup-home");
+					mount_paths.set(App.btrfs_home, unlock_and_mount_device(device_home, App.mount_point_app + "/backup-home"));
 					
-					if (mount_paths[App.btrfs_home].length == 0){
+					if (mount_paths.has_key(App.btrfs_home) && mount_paths.get(App.btrfs_home).length == 0){
 						return false;
 					}
 				}
@@ -501,7 +501,7 @@ public class SnapshotRepo : GLib.Object{
 		
 		log_debug("SnapshotRepo: has_btrfs_system()");
 
-		var root_path = path_combine(mount_paths[App.btrfs_root],App.btrfs_root);
+		var root_path = path_combine(mount_paths.get(App.btrfs_root),App.btrfs_root);
 		log_debug("root_path=%s".printf(root_path));
 		log_debug("btrfs_mode=%s".printf(btrfs_mode.to_string()));
 		if (btrfs_mode){

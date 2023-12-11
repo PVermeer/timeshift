@@ -555,7 +555,7 @@ public class Main : GLib.Object{
 
 		log_debug("detect_system_btrfs_layout()");
 
-		bool has_detected = false;
+		bool is_detected = false;
 		foreach (var layout in SupportedBtrfsSystemLayout.all()) {
 
 			if (layout.match(sys_subvolumes)) {
@@ -564,12 +564,12 @@ public class Main : GLib.Object{
 				this.btrfs_subvolumes_names = layout.get_subvolume_names();
 
 				log_debug(@"Detected $(layout.get_name()) system subvolume layout");
-				has_detected = true;
+				is_detected = true;
 				break;
 			}
 		}
 
-		if (!has_detected) log_debug("Could not detect a supported system subvolume layout");
+		if (!is_detected) log_debug("Could not detect a supported system subvolume layout");
 	}
 
 	private void detect_encrypted_dirs(){
@@ -1676,9 +1676,9 @@ public class Main : GLib.Object{
 
 		log_msg(_("Creating new backup...") + "(BTRFS)");
 
-		log_msg(_("Saving to device") + ": %s".printf(repo.device.device) + ", " + _("mounted at path") + ": %s".printf(repo.mount_paths[this.btrfs_root]));
+		log_msg(_("Saving to device") + ": %s".printf(repo.device.device) + ", " + _("mounted at path") + ": %s".printf(repo.mount_paths.get(this.btrfs_root)));
 		if ((repo.device_home != null) && (repo.device_home.uuid != repo.device.uuid)){
-			log_msg(_("Saving to device") + ": %s".printf(repo.device_home.device) + ", " + _("mounted at path") + ": %s".printf(repo.mount_paths[this.btrfs_home]));
+			log_msg(_("Saving to device") + ": %s".printf(repo.device_home.device) + ", " + _("mounted at path") + ": %s".printf(repo.mount_paths.get(this.btrfs_home)));
 		}
 
 		// take new backup ---------------------------------
@@ -1742,7 +1742,7 @@ public class Main : GLib.Object{
 
 		//log_msg(_("Writing control file..."));
 
-		snapshot_path = path_combine(repo.mount_paths[this.btrfs_root], "timeshift-btrfs/snapshots/%s".printf(snapshot_name));
+		snapshot_path = path_combine(repo.mount_paths.get(this.btrfs_root), "timeshift-btrfs/snapshots/%s".printf(snapshot_name));
 
 		string initial_tags = (tag == "ondemand") ? "" : tag;
 		
@@ -2277,11 +2277,11 @@ public class Main : GLib.Object{
 		// final check - check if target root device is mounted
 
 		if (btrfs_mode){
-			if (repo.mount_paths[this.btrfs_root].length == 0){
+			if (repo.mount_paths.has_key(this.btrfs_root) && repo.mount_paths.get(this.btrfs_root).length == 0){
 				log_error(_("BTRFS device is not mounted") + ": " + this.btrfs_root);
 				return false;
 			}
-			if (include_btrfs_home_for_restore && (repo.mount_paths[this.btrfs_home].length == 0)){
+			if (include_btrfs_home_for_restore && (repo.mount_paths.has_key(this.btrfs_home) && repo.mount_paths.get(this.btrfs_home).length == 0)){
 				log_error(_("BTRFS device is not mounted") + ": " + this.btrfs_home);
 				return false;
 			}
@@ -3145,11 +3145,11 @@ public class Main : GLib.Object{
 			if (found){
 				//delete system subvolumes
 				if (sys_subvolumes.has_key(this.btrfs_root) && snapshot_to_restore.subvolumes.has_key(this.btrfs_root)){
-					sys_subvolumes[this.btrfs_root].remove();
+					sys_subvolumes.get(this.btrfs_root).remove();
 					log_msg(_("Deleted subvolume") + ": " + this.btrfs_root);
 				}
 				if (include_btrfs_home_for_restore && sys_subvolumes.has_key(this.btrfs_home) && snapshot_to_restore.subvolumes.has_key(this.btrfs_home)){
-					sys_subvolumes[this.btrfs_home].remove();
+					sys_subvolumes.get(this.btrfs_home).remove();
 					log_msg(_("Deleted subvolume") + ": " + this.btrfs_home);
 				}
 
@@ -3222,7 +3222,7 @@ public class Main : GLib.Object{
 			else{
 				// write control file -----------
 
-				snapshot_path = path_combine(repo.mount_paths[this.btrfs_root], "timeshift-btrfs/snapshots/%s".printf(snapshot_name));
+				snapshot_path = path_combine(repo.mount_paths.get(this.btrfs_root), "timeshift-btrfs/snapshots/%s".printf(snapshot_name));
 				
 				var snap = Snapshot.write_control_file(
 					snapshot_path, dt_created, repo.device.uuid,
@@ -3876,7 +3876,7 @@ public class Main : GLib.Object{
 
 		// In BTRFS mode, select the system disk if system disk is BTRFS
 		if (btrfs_mode && sys_subvolumes.has_key(this.btrfs_root)){
-			var subvol_root = sys_subvolumes[this.btrfs_root];
+			var subvol_root = sys_subvolumes.get(this.btrfs_root);
 			repo = new SnapshotRepo.from_device(subvol_root.get_device(), parent_win, btrfs_mode);
 			return;
 		}
@@ -4129,14 +4129,14 @@ public class Main : GLib.Object{
 
 			Subvolume subvol = null;
 
-			if ((sys_subvolumes.size > 0) && line.has_suffix(sys_subvolumes[this.btrfs_root].path.replace(repo.mount_paths[this.btrfs_root] + "/"," "))){
-				subvol = sys_subvolumes[this.btrfs_root];
+			if ((sys_subvolumes.size > 0) && sys_subvolumes.has_key(this.btrfs_root) && line.has_suffix(sys_subvolumes.get(this.btrfs_root).path.replace(repo.mount_paths.get(this.btrfs_root) + "/"," "))){
+				subvol = sys_subvolumes.get(this.btrfs_root);
 			}
 			else if ((sys_subvolumes.size > 0)
 				&& sys_subvolumes.has_key(this.btrfs_home)
-				&& line.has_suffix(sys_subvolumes[this.btrfs_home].path.replace(repo.mount_paths[this.btrfs_home] + "/"," "))){
+				&& line.has_suffix(sys_subvolumes.get(this.btrfs_home).path.replace(repo.mount_paths.get(this.btrfs_home) + "/"," "))){
 					
-				subvol = sys_subvolumes[this.btrfs_home];
+				subvol = sys_subvolumes.get(this.btrfs_home);
 			}
 			else {
 				foreach(var bak in repo.snapshots){
@@ -4221,15 +4221,15 @@ public class Main : GLib.Object{
 
 			Subvolume subvol = null;
 
-			if ((sys_subvolumes.size > 0) && (sys_subvolumes[this.btrfs_root].id == subvol_id)){
+			if ((sys_subvolumes.size > 0) && sys_subvolumes.has_key(this.btrfs_root) && (sys_subvolumes.get(this.btrfs_root).id == subvol_id)){
 
-				subvol = sys_subvolumes[this.btrfs_root];
+				subvol = sys_subvolumes.get(this.btrfs_root);
 			}
 			else if ((sys_subvolumes.size > 0)
 				&& sys_subvolumes.has_key(this.btrfs_home)
-				&& (sys_subvolumes[this.btrfs_home].id == subvol_id)){
+				&& (sys_subvolumes.get(this.btrfs_home).id == subvol_id)){
 
-				subvol = sys_subvolumes[this.btrfs_home];
+				subvol = sys_subvolumes.get(this.btrfs_home);
 			}
 			else {
 				foreach(var bak in repo.snapshots){
